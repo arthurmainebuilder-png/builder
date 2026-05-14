@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Arthur Maine Builder Pro</title>
+<style>
+:root{
+  --dark:#111827;--side:#1f2937;--blue:#2563eb;--light:#f3f4f6;--card:#ffffff;--line:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--light);color:#111827}
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:var(--side);color:white;padding:16px;position:fixed;top:0;bottom:0;overflow:auto}
+.logo{font-size:22px;font-weight:bold;margin-bottom:4px}
+.small{font-size:12px;color:#cbd5e1;margin-bottom:20px}
+.nav button{display:block;width:100%;text-align:left;background:transparent;border:0;color:white;padding:12px;border-radius:8px;margin-bottom:5px;cursor:pointer;font-size:15px}
+.nav button:hover,.nav button.active{background:#374151}
+.main{margin-left:250px;width:calc(100% - 250px)}
+.topbar{background:white;border-bottom:1px solid var(--line);padding:15px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+.container{padding:22px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 1px 5px rgba(0,0,0,.08);margin-bottom:18px}
+.metric{font-size:28px;font-weight:bold;margin-top:8px}
+.tab{display:none}
+.tab.active{display:block}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+th{color:#4b5563;background:#f9fafb}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;margin:6px 0 12px}
+textarea{min-height:80px}
+button{touch-action:manipulation;-webkit-tap-highlight-color:rgba(37,99,235,.25)}
+button.primary{background:var(--blue);color:white;border:0;border-radius:8px;padding:12px 16px;cursor:pointer;transition:.15s;min-height:44px}
+button.secondary{background:#e5e7eb;color:#111827;border:0;border-radius:8px;padding:12px 16px;cursor:pointer;transition:.15s;min-height:44px}
+.mobile-menu-btn{display:none;background:#e5e7eb;color:#111827;border:0;border-radius:8px;padding:12px 14px;min-height:44px}.close-menu{display:none;width:100%;margin-bottom:12px}
+button.primary:active,button.secondary:active,.nav button:active{transform:scale(.97);opacity:.8}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.two{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px;background:#e0ecff;color:#1d4ed8}
+.status-green{background:#dcfce7;color:#166534}
+.status-yellow{background:#fef9c3;color:#854d0e}
+.status-red{background:#fee2e2;color:#991b1b}
+.toast{
+  position:fixed;right:22px;bottom:22px;background:#111827;color:white;
+  padding:14px 18px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.25);
+  opacity:0;transform:translateY(20px);transition:.25s;z-index:99;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+tr.new-row{animation:flashRow 1.4s ease}
+@keyframes flashRow{0%{background:#dcfce7}100%{background:white}}
+.job-header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.job-tabs button{border:0;background:#f3f4f6;padding:10px 12px;margin:4px;border-radius:8px;cursor:pointer}
+.click-row{cursor:pointer}
+.click-row:hover{background:#f3f4f6}
+.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.detail-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+@media(max-width:900px){.detail-grid{grid-template-columns:1fr}}
+.job-tabs button:hover{background:#e5e7eb}
+.line-item{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 40px;gap:8px;align-items:center}
+.mobile-note{display:none}
+@media(max-width:900px){
+  .sidebar{display:none;position:fixed;z-index:50;width:86%;max-width:340px;height:100vh;top:0;left:0;box-shadow:4px 0 16px rgba(0,0,0,.35)}
+  .sidebar.open{display:block}
+  .app{display:block}
+  .main{margin-left:0;width:100%}
+  .topbar{gap:8px;padding:10px;align-items:center}
+  .topbar strong{font-size:15px}
+  .mobile-menu-btn{display:inline-block}.close-menu{display:block}
+  .nav button{font-size:17px;padding:16px;min-height:50px}
+  .grid,.row,.two{grid-template-columns:1fr}
+  .line-item{grid-template-columns:1fr}
+  .mobile-note{display:block}
+  .container{padding:12px}
+  .card{padding:14px;border-radius:12px}
+  th,td{font-size:13px;padding:10px}
+  table{display:block;overflow-x:auto;white-space:nowrap}
+  input,select,textarea{font-size:16px;min-height:44px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">AMB Pro</div>
+    <div class="small">Builder-style contractor platform</div><button type="button" class="secondary close-menu" onclick="toggleMobileMenu()">Close Menu</button>
+    <div class="nav">
+      <button type="button" class="active" onclick="showTab('dashboard', this)">Dashboard</button>
+      <button type="button" onclick="showTab('leads', this)">Leads / Customers</button>
+      <button type="button" onclick="showTab('jobs', this)">Jobs</button>
+      <button type="button" onclick="showTab('jobDetail', this)">Job Detail</button>
+      <button type="button" onclick="showTab('estimates', this)">Estimate Builder</button>
+      <button type="button" onclick="showTab('schedule', this)">Schedule</button>
+      <button type="button" onclick="showTab('dailyLogs', this)">Daily Logs</button>
+      <button type="button" onclick="showTab('changeOrders', this)">Change Orders</button>
+      <button type="button" onclick="showTab('invoices', this)">Invoices</button>
+      <button type="button" onclick="showTab('clientPortal', this)">Client Portal</button>
+      <button type="button" onclick="showTab('reports', this)">Reports</button>
+      <button type="button" onclick="showTab('settings', this)">Settings</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button type="button" class="mobile-menu-btn" onclick="toggleMobileMenu()">☰ Menu</button>
+      <strong id="pageTitle">Dashboard</strong>
+      <button type="button" class="primary" onclick="loadDemo()">Load Demo Data</button>
+    </div>
+
+    <div class="container">
+      <div class="mobile-note card">Phone version fixed: tap ☰ Menu to open pages. For best iPhone testing before hosting, open this in Safari after unzipping in Files; once hosted it will work much smoother.</div>
+
+      <section id="dashboard" class="tab active">
+        <div class="grid">
+          <div class="card">Active Jobs<div class="metric" id="mJobs">0</div></div>
+          <div class="card">Open Estimates<div class="metric" id="mEstimates">0</div></div>
+          <div class="card">Unpaid Invoices<div class="metric" id="mInvoices">$0</div></div>
+          <div class="card">Projected Profit<div class="metric" id="mProfit">$0</div></div>
+        </div>
+        <div class="two">
+          <div class="card">
+            <h2>Job Pipeline</h2>
+            <table id="pipelineTable"></table>
+          </div>
+          <div class="card">
+            <h2>Today</h2>
+            <ul id="todayList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="leads" class="tab">
+        <div class="card">
+          <h2>Leads / Customers</h2>
+          <div class="row">
+            <input id="custName" placeholder="Customer name">
+            <input id="custPhone" placeholder="Phone">
+            <input id="custProject" placeholder="Project type">
+          </div>
+          <button type="button" class="primary" onclick="addCustomer()">Add Customer</button>
+        </div>
+        <div class="card"><table id="customerTable"></table></div>
+      </section>
+
+      <section id="jobs" class="tab">
+        <div class="card">
+          <h2>Jobs / Projects</h2><p>Click any job in the table below to open the full job details page.</p>
+          <div class="row">
+            <input id="jobName" placeholder="Job name">
+            <input id="jobClient" placeholder="Client">
+            <select id="jobStatus"><option>Lead</option><option>Estimate Sent</option><option>Scheduled</option><option>In Progress</option><option>Complete</option></select>
+          </div>
+          <div class="row">
+            <input id="jobContract" type="text" inputmode="decimal" placeholder="$18,000">
+            <input id="jobCost" type="text" inputmode="decimal" placeholder="$11,750">
+            <input id="jobStart" type="date">
+          </div>
+          <button type="button" class="primary" onclick="addJob()">Add Job</button>
+        </div>
+        <div class="card"><table id="jobTable"></table></div>
+      </section>
+
+      <section id="jobDetail" class="tab">
+        <div class="card job-header">
+          <div>
+            <h2 id="detailJobName">Select a job</h2>
+            <p id="detailJobSub"><span class="badge">No job selected</span></p>
+          </div>
+          <button type="button" class="primary" onclick="printJobPacket()">Print Job Packet</button>
+        </div>
+
+        <div class="card">
+          <h2>Job Snapshot</h2>
+          <div class="detail-grid">
+            <div class="detail-box"><strong>Client</strong><br><span id="detailClient">-</span></div>
+            <div class="detail-box"><strong>Status</strong><br><span id="detailStatus">-</span></div>
+            <div class="detail-box"><strong>Contract</strong><br><span id="detailContract">$0</span></div>
+            <div class="detail-box"><strong>Profit</strong><br><span id="detailProfit">$0</span></div>
+          </div>
+        </div>
+
+        <div class="card job-tabs">
+          <button type="button" onclick="showJobPanel('overview')">Overview</button>
+          <button type="button" onclick="showJobPanel('jobSchedule')">Schedule</button>
+          <button type="button" onclick="showJobPanel('jobLogs')">Daily Logs</button>
+          <button type="button" onclick="showJobPanel('jobCO')">Change Orders</button>
+          <button type="button" onclick="showJobPanel('jobInvoices')">Invoices</button>
+          <button type="button" onclick="showJobPanel('jobProfit')">Profit</button>
+        </div>
+
+        <div id="jobPanel" class="card">
+          <h2>Overview</h2>
+          <p>Click a job from the Jobs page to load all details here.</p>
+        </div>
+      </section>
+
+      <section id="estimates" class="tab">
+        <div class="card">
+          <h2>Estimate Builder</h2>
+          <div id="estimateItems"></div>
+          <button type="button" class="secondary" onclick="addLineItem()">+ Add Line Item</button>
+          <button type="button" class="primary" onclick="calculateEstimate()">Calculate</button>
+          <h3 id="estimateTotal">Total: $0</h3>
+          <p id="estimateBreakdown"></p>
+        </div>
+      </section>
+
+      <section id="schedule" class="tab">
+        <div class="card">
+          <h2>Schedule</h2>
+          <div class="row">
+            <input id="schedDate" type="date">
+            <input id="schedTask" placeholder="Task">
+            <input id="schedJob" placeholder="Job">
+          </div>
+          <button type="button" class="primary" onclick="addSchedule()">Add Schedule Item</button>
+        </div>
+        <div class="card"><table id="scheduleTable"></table></div>
+      </section>
+
+      <section id="dailyLogs" class="tab">
+        <div class="card">
+          <h2>Daily Log</h2>
+          <div class="row">
+            <input id="logDate" type="date">
+            <input id="logJob" placeholder="Job">
+            <input id="logWeather" placeholder="Weather">
+          </div>
+          <textarea id="logNotes" placeholder="Work completed, delays, materials delivered, subs on site..."></textarea>
+          <button type="button" class="primary" onclick="addLog()">Save Daily Log</button>
+        </div>
+        <div class="card"><table id="logTable"></table></div>
+      </section>
+
+      <section id="changeOrders" class="tab">
+        <div class="card">
+          <h2>Change Orders</h2>
+          <div class="row">
+            <input id="coTitle" placeholder="Change order title">
+            <input id="coAmount" type="text" inputmode="decimal" placeholder="$1,250">
+            <select id="coStatus"><option>Draft</option><option>Sent</option><option>Approved</option><option>Declined</option></select>
+          </div>
+          <textarea id="coDesc" placeholder="Description"></textarea>
+          <button type="button" class="primary" onclick="addCO()">Add Change Order</button>
+        </div>
+        <div class="card"><table id="coTable"></table></div>
+      </section>
+
+      <section id="invoices" class="tab">
+        <div class="card">
+          <h2>Invoices</h2>
+          <div class="row">
+            <input id="invClient" placeholder="Client">
+            <input id="invAmount" type="text" inputmode="decimal" placeholder="$9,000">
+            <select id="invStatus"><option>Draft</option><option>Sent</option><option>Paid</option><option>Overdue</option></select>
+          </div>
+          <button type="button" class="primary" onclick="addInvoice()">Add Invoice</button>
+        </div>
+        <div class="card"><table id="invoiceTable"></table></div>
+      </section>
+
+      <section id="clientPortal" class="tab">
+        <div class="card">
+          <h2>Client Portal Preview</h2>
+          <p>This is what a homeowner would see after logging in.</p>
+          <table>
+            <tr><th>Item</th><th>Status</th></tr>
+            <tr><td>Estimate</td><td><span class="badge status-green">Approved</span></td></tr>
+            <tr><td>Deposit Invoice</td><td><span class="badge status-green">Paid</span></td></tr>
+            <tr><td>Change Order #1</td><td><span class="badge status-yellow">Waiting Approval</span></td></tr>
+            <tr><td>Progress Photos</td><td>12 uploaded</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="reports" class="tab">
+        <div class="card">
+          <h2>Reports</h2>
+          <p>Future reports: job profitability, unpaid invoices, sales pipeline, materials by job, tax expense export, labor tracking.</p>
+          <button type="button" class="primary" onclick="downloadJSON()">Export Data Backup</button>
+        </div>
+      </section>
+
+      <section id="settings" class="tab">
+        <div class="card">
+          <h2>Settings</h2>
+          <label>Company Name</label>
+          <input id="companyName" value="Arthur Maine Builder">
+          <label>Default Markup %</label>
+          <input id="defaultMarkup" type="text" inputmode="decimal" value="20">
+          <button type="button" class="primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('ambData') || '{}');
+if(!data.customers){data={customers:[],jobs:[],schedule:[],logs:[],changeOrders:[],invoices:[],settings:{markup:20}}}
+
+function save(){localStorage.setItem('ambData',JSON.stringify(data));renderAll();}
+function money(n){return '$'+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});}
+function parseMoney(value){
+  if(value === undefined || value === null) return 0;
+  return Number(String(value).replace(/[^0-9.\-]/g,'')) || 0;
+}
+function cleanMoneyInput(el){
+  const val=parseMoney(el.value);
+  if(val){ el.value='$'+val.toLocaleString(); }
+}
+function workingNotice(feature){
+  alert(feature + ' works in demo mode. In the full version this will open a full form, save to the database, and create printable/exportable records.');
+}
+
+function showTab(id,btn){
+  var tabs=document.querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++){tabs[i].classList.remove('active');}
+  var tab=document.getElementById(id);
+  if(tab){tab.classList.add('active');}
+  var buttons=document.querySelectorAll('.nav button');
+  for(var j=0;j<buttons.length;j++){buttons[j].classList.remove('active');}
+  if(btn){btn.classList.add('active');document.getElementById('pageTitle').innerText=btn.innerText;}
+  var side=document.querySelector('.sidebar');
+  if(side){side.classList.remove('open');}
+  window.scrollTo(0,0);
+}
+function toggleMobileMenu(){
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+
+
+function loadDemo(){
+  data.customers=[
+    {name:'John Smith',phone:'401-555-0192',project:'12x18 Deck'},
+    {name:'Sarah Johnson',phone:'401-555-0145',project:'Kitchen Remodel'},
+    {name:'Mike Roberts',phone:'401-555-0188',project:'Bathroom Remodel'}
+  ];
+  data.jobs=[
+    {name:'Smith Deck Build',client:'John Smith',status:'In Progress',contract:18000,cost:11750,start:'2026-05-18'},
+    {name:'Johnson Kitchen',client:'Sarah Johnson',status:'Estimate Sent',contract:42000,cost:30500,start:'2026-06-03'},
+    {name:'Roberts Bath',client:'Mike Roberts',status:'Scheduled',contract:16000,cost:9800,start:'2026-05-28'}
+  ];
+  data.schedule=[
+    {date:'2026-05-18',task:'Frame deck',job:'Smith Deck Build'},
+    {date:'2026-05-19',task:'Install decking',job:'Smith Deck Build'},
+    {date:'2026-05-20',task:'Kitchen walkthrough',job:'Johnson Kitchen'}
+  ];
+  data.logs=[
+    {date:'2026-05-14',job:'Smith Deck Build',weather:'Clear',notes:'Footings inspected, material delivery confirmed.'}
+  ];
+  data.changeOrders=[
+    {title:'Add picture frame border',amount:1250,status:'Sent',desc:'Upgrade deck border detail.'}
+  ];
+  data.invoices=[
+    {client:'John Smith',amount:9000,status:'Paid'},
+    {client:'John Smith',amount:9000,status:'Sent'},
+    {client:'Sarah Johnson',amount:5000,status:'Draft'}
+  ];
+  save();
+}
+
+let lastUpdatedTable='';
+function table(el,headers,rows,rowAttrs){
+  document.getElementById(el).innerHTML='<tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+rows.map((r,i)=>{
+    let attrs=(rowAttrs && rowAttrs[i]) ? ' '+rowAttrs[i] : '';
+    if(el===lastUpdatedTable && i===rows.length-1){ attrs += ' class="new-row"'; }
+    return '<tr'+attrs+'>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>';
+  }).join('');
+}
+function showToast(message){
+  const t=document.getElementById('toast');
+  t.innerText=message;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+function clearFields(ids){
+  ids.forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+}
+function saveWithFeedback(tableId,message){
+  lastUpdatedTable=tableId;
+  save();
+  showToast(message);
+  setTimeout(()=>{lastUpdatedTable='';renderAll();},1500);
+}
+function renderAll(){
+  table('customerTable',['Name','Phone','Project'],data.customers.map(c=>[c.name,c.phone,c.project]));
+  table('jobTable',['Job','Client','Status','Contract','Cost','Profit'],data.jobs.map((j,i)=>['<strong>'+j.name+'</strong><br><small>Click to open details</small>',j.client,j.status,money(j.contract),money(j.cost),money(j.contract-j.cost)]),data.jobs.map((j,i)=>'class="click-row" onclick="openJob('+i+')"'));
+  table('pipelineTable',['Job','Status','Profit'],data.jobs.map(j=>[j.name,j.status,money(j.contract-j.cost)]));
+  table('scheduleTable',['Date','Task','Job'],data.schedule.map(s=>[s.date,s.task,s.job]));
+  table('logTable',['Date','Job','Weather','Notes'],data.logs.map(l=>[l.date,l.job,l.weather,l.notes]));
+  table('coTable',['Title','Amount','Status','Description'],data.changeOrders.map(c=>[c.title,money(c.amount),c.status,c.desc]));
+  table('invoiceTable',['Client','Amount','Status'],data.invoices.map(i=>[i.client,money(i.amount),i.status]));
+  document.getElementById('mJobs').innerText=data.jobs.filter(j=>j.status!=='Complete').length;
+  document.getElementById('mEstimates').innerText=data.jobs.filter(j=>j.status==='Estimate Sent'||j.status==='Lead').length;
+  document.getElementById('mInvoices').innerText=money(data.invoices.filter(i=>i.status!=='Paid').reduce((a,b)=>a+Number(b.amount),0));
+  document.getElementById('mProfit').innerText=money(data.jobs.reduce((a,b)=>a+(Number(b.contract)-Number(b.cost)),0));
+  document.getElementById('todayList').innerHTML=data.schedule.slice(0,5).map(s=>'<li>'+s.date+' - '+s.task+' - '+s.job+'</li>').join('');
+}
+
+let selectedJobIndex = null;
+
+function openJob(index){
+  selectedJobIndex = index;
+  const job = data.jobs[index];
+  document.getElementById('detailJobName').innerText = job.name;
+  document.getElementById('detailJobSub').innerHTML = '<span class="badge status-green">'+job.status+'</span> Start: '+(job.start || 'Not scheduled');
+  document.getElementById('detailClient').innerText = job.client || '-';
+  document.getElementById('detailStatus').innerText = job.status || '-';
+  document.getElementById('detailContract').innerText = money(job.contract);
+  document.getElementById('detailProfit').innerText = money((job.contract||0)-(job.cost||0));
+  showTab('jobDetail', Array.from(document.querySelectorAll('.nav button')).find(b=>b.innerText.trim()==='Job Detail'));
+  showJobPanel('overview');
+  showToast('Opened job details');
+}
+
+function selectedJob(){
+  if(selectedJobIndex === null || !data.jobs[selectedJobIndex]){
+    document.getElementById('jobPanel').innerHTML='<h2>No job selected</h2><p>Go to Jobs and click a specific job first.</p>';
+    return null;
+  }
+  return data.jobs[selectedJobIndex];
+}
+
+function related(items, key, value){
+  return items.filter(x => String(x[key]||'').toLowerCase().includes(String(value||'').toLowerCase()));
+}
+
+function showJobPanel(panel){
+  const job = selectedJob();
+  if(!job) return;
+  const box=document.getElementById('jobPanel');
+  const profit=(job.contract||0)-(job.cost||0);
+  if(panel==='overview'){
+    box.innerHTML='<h2>Overview</h2><p><strong>'+job.name+'</strong> for '+job.client+'</p><p>Status: '+job.status+'</p><p>Start Date: '+(job.start||'Not scheduled')+'</p><p>This is where notes, address, contacts, allowances, and job files will live.</p>';
+  }
+  if(panel==='jobSchedule'){
+    const rows=related(data.schedule,'job',job.name);
+    box.innerHTML='<h2>Schedule</h2>'+makeMiniTable(['Date','Task','Job'],rows.map(s=>[s.date,s.task,s.job]));
+  }
+  if(panel==='jobLogs'){
+    const rows=related(data.logs,'job',job.name);
+    box.innerHTML='<h2>Daily Logs</h2>'+makeMiniTable(['Date','Weather','Notes'],rows.map(l=>[l.date,l.weather,l.notes]));
+  }
+  if(panel==='jobCO'){
+    box.innerHTML='<h2>Change Orders</h2>'+makeMiniTable(['Title','Amount','Status'],data.changeOrders.map(c=>[c.title,money(c.amount),c.status]));
+  }
+  if(panel==='jobInvoices'){
+    const rows=related(data.invoices,'client',job.client);
+    box.innerHTML='<h2>Invoices</h2>'+makeMiniTable(['Client','Amount','Status'],rows.map(i=>[i.client,money(i.amount),i.status]));
+  }
+  if(panel==='jobProfit'){
+    box.innerHTML='<h2>Profit</h2><p>Contract Price: '+money(job.contract)+'</p><p>Estimated Cost: '+money(job.cost)+'</p><h3>Projected Profit: '+money(profit)+'</h3><p>Margin: '+(((profit/(job.contract||1))*100).toFixed(1))+'%</p>';
+  }
+}
+
+function makeMiniTable(headers,rows){
+  if(!rows.length) return '<p>No records connected to this job yet.</p>';
+  return '<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</table>';
+}
+
+function printJobPacket(){
+  if(selectedJobIndex === null){ showToast('Select a job first'); return; }
+  window.print();
+}
+
+
+function addCustomer(){data.customers.push({name:custName.value,phone:custPhone.value,project:custProject.value});clearFields(['custName','custPhone','custProject']);saveWithFeedback('customerTable','Customer added');}
+function addJob(){data.jobs.push({name:jobName.value,client:jobClient.value,status:jobStatus.value,contract:parseMoney(jobContract.value),cost:parseMoney(jobCost.value),start:jobStart.value});clearFields(['jobName','jobClient','jobContract','jobCost','jobStart']);saveWithFeedback('jobTable','Job added');}
+function addSchedule(){data.schedule.push({date:schedDate.value,task:schedTask.value,job:schedJob.value});clearFields(['schedDate','schedTask','schedJob']);saveWithFeedback('scheduleTable','Schedule item added');}
+function addLog(){data.logs.push({date:logDate.value,job:logJob.value,weather:logWeather.value,notes:logNotes.value});clearFields(['logDate','logJob','logWeather','logNotes']);saveWithFeedback('logTable','Daily log saved');}
+function addCO(){data.changeOrders.push({title:coTitle.value,amount:parseMoney(coAmount.value),status:coStatus.value,desc:coDesc.value});clearFields(['coTitle','coAmount','coDesc']);saveWithFeedback('coTable','Change order added');}
+function addInvoice(){data.invoices.push({client:invClient.value,amount:parseMoney(invAmount.value),status:invStatus.value});clearFields(['invClient','invAmount']);saveWithFeedback('invoiceTable','Invoice added');}
+function saveSettings(){data.settings={company:companyName.value,markup:parseMoney(defaultMarkup.value)};save();alert('Settings saved');}
+
+function addLineItem(){
+  const wrap=document.getElementById('estimateItems');
+  const div=document.createElement('div');
+  div.className='line-item';
+  div.innerHTML='<input placeholder="Item description"><input type="text" inputmode="decimal" placeholder="Qty" value="1"><input type="text" inputmode="decimal" placeholder="$ Unit cost"><input type="text" inputmode="decimal" placeholder="Markup %" value="'+(data.settings?.markup||20)+'"><button type="button" class="secondary" onclick="this.parentElement.remove()">X</button>';
+  wrap.appendChild(div);
+}
+function calculateEstimate(){
+  let total=0,cost=0;
+  document.querySelectorAll('.line-item').forEach(row=>{
+    const vals=row.querySelectorAll('input');
+    const qty=parseMoney(vals[1].value), unit=parseMoney(vals[2].value), markup=parseMoney(vals[3].value);
+    const lineCost=qty*unit;
+    cost+=lineCost;
+    total+=lineCost*(1+markup/100);
+  });
+  document.getElementById('estimateTotal').innerText='Total Price: '+money(total);
+  document.getElementById('estimateBreakdown').innerText='Cost: '+money(cost)+' | Projected Profit: '+money(total-cost);
+  showToast('Estimate calculated');
+}
+function downloadJSON(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='amb-data-backup.json';a.click();
+}
+['jobContract','jobCost','coAmount','invAmount'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('blur',()=>cleanMoneyInput(el));
+});
+addLineItem();addLineItem();renderAll();
+</script>
+<div id="toast" class="toast">Saved</div>
+</body>
+</html>
